@@ -1,0 +1,127 @@
+1. How to partition
+
+add storage to vm
+power off the vm
+go to storage settings
+create storage
+create vdi - preallocate
+create and choose
+lsblk
+fdisk /dev/sdb
+n
+p
+1
+2048
++1G
+p
+w
+lsblk
+mkfs -t ext4 /dev/sdb
+mkdir mountp
+mount /dev/sdb /mountp
+cd mountp
+
+2. LVM
+
+add two hdds
+lvmdiskscan
+lsblk
+pvcreate /dev/sdb /dev/sdc
+vgcreate groupname /dev/sdb /dev/sdc
+pvs
+vgs
+lvcreate -L 2.5G -n name groupname
+mkfs -t xfc /dev/groupname/name
+mkdir mountp
+mount /dev/groupname/name /mountp
+
+3.Mount PD
+
+systemctl stop udisks2.service
+lsblk
+mkdir mountp
+mount /dev/sdb mountp
+cd mountp
+unmount /dev/sdb
+
+4. Reset Root Passwd
+
+reboot system and press e on grub
+type 
+rw init = /bin/bash :press ctrl+x
+passwd <password>
+#touch /.autorelabel
+#exec /sbin/init
+
+5. Custom Service
+
+cd /usr/local/bin
+touch newservice.sh
+vi newservice.sh
+#!/bin/bash
+#Service Script
+while true; do 
+	echo "Service running" >> /var/log/newservice.log
+	sleep 10
+done
+:wq
+
+chmod +x newservice.sh
+vi newservice.service
+[Unit]
+Description = new service
+After = network.target
+
+[Service]
+Type = simple
+ExecStart = /usr/local/bin/newservice.sh
+Restart = always
+RestartSec = 5
+User = root
+
+[Install]
+WantedBy=multi-user.target
+:wq
+
+systemctl daemon-reload
+systemctl start newservice.service
+systemctl statys newservice.service
+tail -n 5 /var/log/newservice.log
+
+6.NFS
+dnf install nfs-utils
+systemctl start nfs-server
+systemctl start rpcbind
+cd /home
+vi /etc/exports
+/home *(rw,sync)
+:wq
+chown Nobody:nobody /home
+chmod 777 /home
+systemctl restart nfs-server
+systemctl stop firewalld
+iptables -F
+ipconfig
+
+Client
+mkdir mountpoint
+mount -t nfs <ipserver>:/home /mountpoint
+cd mountpoint
+
+
+7. WEB SERVER
+sudo dnf update -y
+sudo dnf install httpd -y
+sudo systemctl enable --now httpd
+sudo systemctl stop firewalld
+iptables -F
+sudo systemctl status httpd
+cd /etc/httpd/conf
+vi httpd.conf
+Add listening port
+cd /var/www/html
+Add a webpage
+
+
+
+
