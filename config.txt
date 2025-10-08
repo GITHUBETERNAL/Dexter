@@ -21,6 +21,7 @@ mkdir mountp
 mount /dev/sdb /mountp
 cd mountp
 
+##################################################################################################################################################################
 2. LVM
 
 add two hdds
@@ -35,6 +36,7 @@ mkfs -t xfc /dev/groupname/name
 mkdir mountp
 mount /dev/groupname/name /mountp
 
+##################################################################################################################################################################
 3.Mount PD
 
 systemctl stop udisks2.service
@@ -44,6 +46,7 @@ mount /dev/sdb mountp
 cd mountp
 unmount /dev/sdb
 
+##################################################################################################################################################################
 4. Reset Root Passwd
 
 reboot system and press e on grub
@@ -53,6 +56,7 @@ passwd <password>
 #touch /.autorelabel
 #exec /sbin/init
 
+##################################################################################################################################################################
 5. Custom Service
 
 cd /usr/local/bin
@@ -88,6 +92,7 @@ systemctl start newservice.service
 systemctl statys newservice.service
 tail -n 5 /var/log/newservice.log
 
+##################################################################################################################################################################
 6.NFS
 dnf install nfs-utils
 systemctl start nfs-server
@@ -108,7 +113,7 @@ mkdir mountpoint
 mount -t nfs <ipserver>:/home /mountpoint
 cd mountpoint
 
-
+##################################################################################################################################################################
 7. WEB SERVER
 sudo dnf update -y
 sudo dnf install httpd -y
@@ -121,6 +126,206 @@ vi httpd.conf
 Add listening port
 cd /var/www/html
 Add a webpage
+
+##################################################################################################################################################################
+8. hostnamectl hostname dhcpserver
+/bin/bash
+dnf -y install kea
+/etc/kea
+ls
+cp kea-dhcp4.conf kea-dhcp4.conf.bak
+ls
+chown root:kea kea-dhcp4.conf
+chmod 777 kea-dhcp.conf
+ls -l kea-dhcp4.conf
+vi kea-dhcp4.conf
+	line 34 - "add the adapter"
+	line 154- dns ip (any inside the network but outside the dhcp pool)
+	line 162, 171 - add google.com
+	line 237 - router ip
+	line 238 - add hostname - dhcpserver
+	line 300 - network with subnet
+	line 307 - dhcp pool
+	line 339 - router ip
+from 340 - 435 - comment every string in purple. After options, before loggers
+systemctl stop firewalld
+iptables -F
+systemctl enable --new kea-dhcp4.service
+systemctl status kea-dhcp4.service
+
+##################################################################################################################################################################
+9. Mail Server (Sendmail)
+1. Set hostname of the system as subdomain
+	#hostnamectl hostname sdomain.in
+
+2. Check IP and note it
+	#ip a
+
+3. Install SMTP server (sendmail)
+	#dnf install epel-release -y
+	#dnf install sendmail sendmail-cf -y
+
+4. Configure sendmail
+	#vi /etc/mail/sendmail.mc (mc:macroconfifure file, this file will be used to generate actual configuration file later)
+	Line 121: add "dnl" at begining of the line, doing this will comment that line
+
+5. Generate main configuration file (sendmail.cf)
+	#m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
+
+6. Start sendmail service
+	#systemctl restart sendmail.service
+	#netstat -pant : to check if sendmail is running, and if it is running, it is running on port 25 or not.
+
+7. Configure host file (for non-dns configuration: if you dont want to setup a dns server then do the following. May not always work)
+	#vi /etc/hosts
+	add both system's ip address at the end
+	192.168.__.__	sdomain.in
+	192.168.__.__	rdomain.in
+
+8. Disable Firewall
+	#systemctl stop firewalld
+	#iptables -F
+
+9. Add users for senders and recievers
+	#useradd sdomain
+	#password sdomain
+
+10. The mail is stored in a file with same name as the user in
+	#cd /var/spool/mail
+	#ls
+	#sdomain
+
+11. Install MUA(Mail User Agent)
+	#dnf install s-nail -y 
+
+12. Send the mail
+	#mailx -s "Subject" sdomain@sdomain.in [-s: subject]
+	--> mail body
+	--> yes
+	--> Ctrl + D
+
+13. DO THE SAME CONFIGURATION FOR rdomain.in IN SECOND SYSTEM
+
+14. Configure DNS
+	for sdomain --> mail.sdomain.in --> 192.168.__.__
+	for rdomain --> mail.rdomain.in --> 192.168.__.__
+
+15. Change to SuperUser
+	#sudo su -
+	#dnf -y install  bind
+	#vi /etc/named.conf
+	--> 
+		zone "sdomain.in" IN {
+			type master;
+			file "sdomain.in-zone";
+		};
+		zone "rdomain.in" IN {
+			type master;
+			file "rdomain.in-zone";
+		};
+16. #vi /var/named/sdomain.in-zone
+	--> 
+		sdomain.in	3600	IN	SOA		sdomain.in	root.sdomain.in (
+			1;
+			1D;
+			1H;
+			1W;
+			1H;
+		)
+		sdomain.in.		3600	IN	NS	ns.sdomain.in.
+		ns.sdomain.in.	3600	IN	A	192.168.__.__	(DNS IP)
+		sdomain.in.		3600	IN	MX	1	mail.sdomain.in
+		mail.sdomain.in	3600	IN	A	192.168.__.__	(sdomain IP)
+	:wq
+17. Copy sdomain to rdomain to configure second zone
+	#cp sdomain.in-zone rdomain.in-zone
+
+18. Edit domain
+	#vi rdomain.in-zone
+	-->
+		replace sdomain with  rdomain and place proper ip 
+		%s/sdomain/rdomain -> to replace "sdomain" with "rdomain"
+		!wq
+19. Check the integrity of files:
+	#named-checkzone rdomain rdomain.in-zone
+	#named-checkzone sdomain sdomain.in-zone
+
+
+20. Change the owner of the file
+	#chown named:named rdomain.in-zone sdomain.in-zone
+21. Change the permission of the file
+	#chmod 777 rdomain.in-zone sdomain.in-zone
+
+22. Check the connectivity from the DNS through respective machines. sdomain from machine 1 and rdomain from machine 2
+	#nslookup
+	>server <server ip>
+	>ser type=MX
+	>sdomain
+	--> mail.sdomain.in
+	>rdomain
+
+23. Restart sendmail on both machines
+	#systemctl restart sendmail
+
+##################################################################################################################################################################
+10. Mail Server (Postfix)
+1. Remove Sendmail
+	#dnf remove sendmail sendmail-cf -y
+
+2. Set hostname
+	#hostnamectl hostname mail.sdomain.in
+
+3. Install Postfix
+	#dnf install postfix -y
+
+4. Configure postfix
+	#vi /etc/postfix/main.cf
+	-->
+		Line 98: uncomment and modify
+			myhostname=mail.sdomain.in
+		Line 106: uncomment and modify
+			mydomain=sdomain.in
+		Line 122: uncomment
+			myorigin=$mydomain
+		Line 136: uncomment
+			inet_interfaces=ALL
+		Line 139: comment
+
+		Line 141:
+			inet_protocols=ipv4
+		Line 187: comment
+
+		Line 188: uncomment
+			mydestination=$hostname,localhost.mydo...
+		Line 290: modify
+			mynetworks=192.168.0.0\22,127.0.0.0\8
+		Line 446: comment
+
+		Line 447: uncomment
+			home_mailbox=Maildir/
+
+5. Restart Postfix Service
+	#systemctl restart postfix
+
+6. Check statistics
+	#netstat -pant
+
+7. Stop firewall
+	#systemctl stop firewalld
+	#iptables -F
+
+8. Send mail
+	#mailx -s "Subject" rdomain@rdomain.in
+	--> draft message
+	--> Ctrl + D
+
+9. Check folder
+	#cd Maildir/new
+
+	
+	
+
+
 
 
 
