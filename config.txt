@@ -6,68 +6,68 @@ go to storage settings
 create storage
 create vdi - preallocate
 create and choose
-lsblk
-fdisk /dev/sdb
-n
-p
+1) lsblk
+2) fdisk /dev/sdb
+3) n
+4) p
 1
 2048
 +1G
-p
-w
-lsblk
-mkfs -t ext4 /dev/sdb
-mkdir mountp
-mount /dev/sdb /mountp
-cd mountp
+5) p
+6) w
+7) lsblk
+8) mkfs -t ext4 /dev/sdb
+9) mkdir mountp
+10) mount /dev/sdb /mountp
+11) cd mountp
 
 2. LVM
 
-add two hdds
-lvmdiskscan
-lsblk
-pvcreate /dev/sdb /dev/sdc
-vgcreate groupname /dev/sdb /dev/sdc
-pvs
-vgs
-lvcreate -L 2.5G -n name groupname
-mkfs -t xfc /dev/groupname/name
-mkdir mountp
-mount /dev/groupname/name /mountp
+1) add two hdds
+2) lvmdiskscan
+3) lsblk
+4) pvcreate /dev/sdb /dev/sdc
+5) vgcreate groupname /dev/sdb /dev/sdc
+6) pvs
+7) vgs
+8) lvcreate -L 2.5G -n name groupname
+9) mkfs -t xfc /dev/groupname/name
+10) mkdir mountp
+11) mount /dev/groupname/name /mountp
 
 3.Mount PD
 
-systemctl stop udisks2.service
-lsblk
-mkdir mountp
-mount /dev/sdb mountp
-cd mountp
-unmount /dev/sdb
+1) systemctl stop udisks2.service
+2) lsblk
+3) mkdir mountp
+4) mount /dev/sdb mountp
+5) cd mountp
+6) unmount /dev/sdb
 
 4. Reset Root Passwd
 
-reboot system and press e on grub
-type 
-rw init = /bin/bash :press ctrl+x
-passwd <password>
-#touch /.autorelabel
-#exec /sbin/init
+1) reboot system and press e on grub
+after quite type 
+2) rw init = /bin/bash :press ctrl+x
+3) passwd <password>
+4) #touch /.autorelabel
+5) #exec /sbin/init
 
 5. Custom Service
 
-cd /usr/local/bin
-touch newservice.sh
-vi newservice.sh
-#!/bin/bash
-#Service Script
+1) cd /usr/local/bin
+2) touch newservice.sh
+3) vi newservice.sh
+4) #!/bin/bash
+5) #Service Script
 while true; do 
 	echo "Service running" >> /var/log/newservice.log
 	sleep 10
 done
 :wq
 
-chmod +x newservice.sh
-vi newservice.service
+6) chmod +x newservice.sh
+7) vi newservice.service
 [Unit]
 Description = new service
 After = network.target
@@ -83,44 +83,45 @@ User = root
 WantedBy=multi-user.target
 :wq
 
-systemctl daemon-reload
-systemctl start newservice.service
-systemctl statys newservice.service
-tail -n 5 /var/log/newservice.log
+8) systemctl daemon-reload
+9) systemctl start newservice.service
+10) systemctl statys newservice.service
+11) tail -n 5 /var/log/newservice.log
 
 6.NFS
-dnf install nfs-utils
-systemctl start nfs-server
-systemctl start rpcbind
-cd /home
-vi /etc/exports
+1) dnf install nfs-utils
+2) systemctl start nfs-server
+3) systemctl start rpcbind
+4) cd /home
+5) vi /etc/exports
 /home *(rw,sync)
 :wq
-chown Nobody:nobody /home
-chmod 777 /home
-systemctl restart nfs-server
-systemctl stop firewalld
-iptables -F
-ipconfig
+6) chown Nobody:nobody /home
+7) chmod 777 /home
+8) systemctl restart nfs-server
+9) systemctl stop firewalld
+10) iptables -F
+11) ipconfig
 
 Client
-mkdir mountpoint
-mount -t nfs <ipserver>:/home /mountpoint
-cd mountpoint
+12) mkdir mountpoint
+13) mount -t nfs <ipserver>:/home /mountpoint
+14) cd mountpoint
 
 
 7. WEB SERVER
-sudo dnf update -y
-sudo dnf install httpd -y
-sudo systemctl enable --now httpd
-sudo systemctl stop firewalld
-iptables -F
-sudo systemctl status httpd
-cd /etc/httpd/conf
-vi httpd.conf
+1) sudo dnf update -y
+2) sudo dnf install httpd -y
+3) sudo systemctl enable --now httpd
+4) sudo systemctl stop firewalld
+5) iptables -F
+6) sudo systemctl status httpd
+7) cd /etc/httpd/conf
+8) vi httpd.conf
 Add listening port
-cd /var/www/html
+9) cd /var/www/html
 Add a webpage
+
 
 
 
