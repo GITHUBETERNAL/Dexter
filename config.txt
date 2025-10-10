@@ -1,4 +1,4 @@
-1. How to partition
+3. How to partition
 
 add storage to vm
 power off the vm
@@ -22,7 +22,17 @@ mount /dev/sdb /mountp
 cd mountp
 
 ##################################################################################################################################################################
-2. LVM
+4.Mount PD
+
+systemctl stop udisks2.service
+lsblk
+mkdir mountp
+mount /dev/sdb mountp
+cd mountp
+unmount /dev/sdb
+
+##################################################################################################################################################################
+5. LVM
 
 add two hdds
 lvmdiskscan
@@ -37,17 +47,8 @@ mkdir mountp
 mount /dev/groupname/name /mountp
 
 ##################################################################################################################################################################
-3.Mount PD
 
-systemctl stop udisks2.service
-lsblk
-mkdir mountp
-mount /dev/sdb mountp
-cd mountp
-unmount /dev/sdb
-
-##################################################################################################################################################################
-4. Reset Root Passwd
+7. Reset Root Passwd
 
 reboot system and press e on grub
 type 
@@ -57,7 +58,7 @@ passwd <password>
 #exec /sbin/init
 
 ##################################################################################################################################################################
-5. Custom Service
+10. Custom Service
 
 cd /usr/local/bin
 touch newservice.sh
@@ -93,7 +94,7 @@ systemctl statys newservice.service
 tail -n 5 /var/log/newservice.log
 
 ##################################################################################################################################################################
-6.NFS
+12.NFS
 dnf install nfs-utils
 systemctl start nfs-server
 systemctl start rpcbind
@@ -114,21 +115,8 @@ mount -t nfs <ipserver>:/home /mountpoint
 cd mountpoint
 
 ##################################################################################################################################################################
-7. WEB SERVER
-sudo dnf update -y
-sudo dnf install httpd -y
-sudo systemctl enable --now httpd
-sudo systemctl stop firewalld
-iptables -F
-sudo systemctl status httpd
-cd /etc/httpd/conf
-vi httpd.conf
-Add listening port
-cd /var/www/html
-Add a webpage
-
-##################################################################################################################################################################
-8. hostnamectl hostname dhcpserver
+16. DHCP Server
+hostnamectl hostname dhcpserver
 /bin/bash
 dnf -y install kea
 /etc/kea
@@ -154,7 +142,22 @@ systemctl enable --new kea-dhcp4.service
 systemctl status kea-dhcp4.service
 
 ##################################################################################################################################################################
-9. Mail Server (Sendmail)
+26. WEB SERVER
+sudo dnf update -y
+sudo dnf install httpd -y
+sudo systemctl enable --now httpd
+sudo systemctl stop firewalld
+iptables -F
+sudo systemctl status httpd
+cd /etc/httpd/conf
+vi httpd.conf
+Add listening port
+cd /var/www/html
+Add a webpage
+
+##################################################################################################################################################################
+
+30.1. Mail Server (Sendmail)
 1. Set hostname of the system as subdomain
 	#hostnamectl hostname sdomain.in
 
@@ -268,7 +271,7 @@ systemctl status kea-dhcp4.service
 	#systemctl restart sendmail
 
 ##################################################################################################################################################################
-10. Mail Server (Postfix)
+30.2. Mail Server (Postfix)
 1. Remove Sendmail
 	#dnf remove sendmail sendmail-cf -y
 
@@ -324,6 +327,7 @@ systemctl status kea-dhcp4.service
 
 	
 	
+
 
 
 
