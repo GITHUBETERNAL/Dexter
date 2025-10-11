@@ -325,8 +325,61 @@ Add a webpage
 9. Check folder
 	#cd Maildir/new
 
+##################################################################################################################################################################
+
+32. Squid Proxy
+	1. Install Squid
+			#dnf install squid* -y
+	2. Enable the service	
+			#systemctl enable --now squid
+			#systemctl status squid
+	3. Disable Firewall
+			#systemctl disable firewalld
+			#iptables -F 
+	4. Configure squid settings
+			#vi /etc/squid/squid.conf
+				-->
+					Line 53: add
+						acl <name of acl> src <network id of server/subnet>
+					Line 53: add
+						http_access allow <name of acl in line 53>
+	5. In Client machine	
+		#vi /etc/profile.d/proxyserver.sh
+			-->
+				#Define the variables
+				PROXY_URL=<ip of the server>:3128
+				HTTP_PROXY=$PROXY_URL
+				HTTPS_PROXY=$PROXY_URL
+				FTP_PROXY=$PROXY_URL
+				http_proxy=$PROXY_URL
+				https_proxy=$PROXY_URL
+				ftp_proxy=$PROXY_URL
+	6. Export all the variables into sh file
+		#export HTTP_PROXY HTTPS_PROXY FTP_PROXY http_proxy https_proxy ftp_proxy
 	
+	7. Load that sh file into the shell
+		#source /etc/profile.d/proxyserver.sh  #source means executing the shell and make it systemwide available.
+
+	8. Restart the squid service in the server
+		#systemctl restart squid
 	
+	9. On client, try to access google.com
+		#wget www.google.com
+	
+	10. Check the logs if the site was accessed
+		#cat /var/log/squid/access.log 
+
+	11. Add the acl to squid server
+		#vi /etc/squid/squid.conf 
+			-->
+				Line 49: add
+					acl blocksites dstdomain www.google.com www.netflix.com www.facebook.com
+				Line 50: add
+					http access deny blocksites
+	
+	12. Now try to access the sites and check the log
+		#wget www.google.com
+		#wget www.netflix.com
 
 
 
