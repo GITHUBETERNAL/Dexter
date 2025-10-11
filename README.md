@@ -45,6 +45,7 @@ All Linux Practicals
 - [ ] 33. Secure GRUB Terminal with password
 - [ ] 34. Custom Service
 - [ ] 35. Install Squirrelmail (on Postfix)
+- [x] 36. Squid Proxy
 
 #################################################################################
 #################################################################################

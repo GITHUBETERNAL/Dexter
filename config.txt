@@ -327,7 +327,7 @@ Add a webpage
 
 ##################################################################################################################################################################
 
-32. Squid Proxy
+36. Squid Proxy
 	1. Install Squid
 			#dnf install squid* -y
 	2. Enable the service	
@@ -380,7 +380,7 @@ Add a webpage
 	12. Now try to access the sites and check the log
 		#wget www.google.com
 		#wget www.netflix.com
-
+		#tail -f -n 5 /var/log/squid/access.log
 
 
 
